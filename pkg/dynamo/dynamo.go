@@ -10,6 +10,7 @@ import (
 type Store struct {
 	dynamo *dynamodb.DynamoDB
 	name   string
+	table  string
 }
 
 type Item struct {
@@ -17,13 +18,14 @@ type Item struct {
 	Value string `json:"value"`
 }
 
-func NewStore(name string, cfgs ...*aws.Config) *Store {
+func NewStore(name string, table string, cfgs ...*aws.Config) *Store {
 	sess := session.Must(session.NewSession())
 	svc := dynamodb.New(sess, cfgs...)
 
 	return &Store{
 		dynamo: svc,
 		name:   name,
+		table:  table,
 	}
 }
 
@@ -44,7 +46,7 @@ func (s *Store) Put(key string, value []byte) error {
 
 	_, err = s.dynamo.PutItem(&dynamodb.PutItemInput{
 		Item:      av,
-		TableName: &s.name,
+		TableName: &s.table,
 	})
 
 	return err
@@ -52,7 +54,7 @@ func (s *Store) Put(key string, value []byte) error {
 
 func (s *Store) Get(key string) (value []byte, err error) {
 	result, err := s.dynamo.GetItem(&dynamodb.GetItemInput{
-		TableName: &s.name,
+		TableName: &s.table,
 		Key: map[string]*dynamodb.AttributeValue{
 			"key": {
 				S: aws.String(key),
@@ -75,7 +77,7 @@ func (s *Store) Delete(key string) error {
 				S: aws.String(key),
 			},
 		},
-		TableName: &s.name,
+		TableName: &s.table,
 	}
 
 	_, err := s.dynamo.DeleteItem(input)

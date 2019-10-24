@@ -7,12 +7,13 @@ import (
 )
 
 type Store struct {
-	name     string
-	filePath string
-	db       *bbolt.DB
+	name       string
+	bucketName string
+	filePath   string
+	db         *bbolt.DB
 }
 
-func NewFileStore(name string, filePath string) *Store {
+func NewFileStore(name string, bucketName string, filePath string) *Store {
 	db, err := bbolt.Open(filePath, 0666, nil)
 
 	if err != nil {
@@ -20,7 +21,7 @@ func NewFileStore(name string, filePath string) *Store {
 	}
 
 	err = db.Update(func(tx *bbolt.Tx) error {
-		_, err := tx.CreateBucket([]byte(name))
+		_, err := tx.CreateBucket([]byte(bucketName))
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
@@ -32,9 +33,10 @@ func NewFileStore(name string, filePath string) *Store {
 	}
 
 	return &Store{
-		name:     name,
-		filePath: filePath,
-		db:       db,
+		name:       name,
+		bucketName: bucketName,
+		filePath:   filePath,
+		db:         db,
 	}
 }
 
@@ -44,7 +46,7 @@ func (s *Store) Name() string {
 
 func (s *Store) Put(key string, value []byte) error {
 	err := s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(s.name))
+		b := tx.Bucket([]byte(s.bucketName))
 		return b.Put([]byte(key), value)
 	})
 	return err
@@ -52,7 +54,7 @@ func (s *Store) Put(key string, value []byte) error {
 
 func (s *Store) Get(key string) (value []byte, err error) {
 	err = s.db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(s.name))
+		b := tx.Bucket([]byte(s.bucketName))
 		v := b.Get([]byte(key))
 		value = v
 		return nil
@@ -62,7 +64,7 @@ func (s *Store) Get(key string) (value []byte, err error) {
 
 func (s *Store) Delete(key string) error {
 	err := s.db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(s.name))
+		b := tx.Bucket([]byte(s.bucketName))
 		return b.Delete([]byte(key))
 	})
 	return err
