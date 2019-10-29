@@ -1,6 +1,8 @@
 package dynamo
 
 import (
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -14,8 +16,9 @@ type Store struct {
 }
 
 type Item struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key       string    `json:"key"`
+	Value     string    `json:"value"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func NewStore(name string, table string, cfgs ...*aws.Config) *Store {
@@ -35,8 +38,9 @@ func (s *Store) Name() string {
 
 func (s *Store) Put(key string, value []byte) error {
 	item := &Item{
-		Key:   key,
-		Value: string(value),
+		Key:       key,
+		Value:     string(value),
+		UpdatedAt: time.Now(),
 	}
 
 	av, err := dynamodbattribute.MarshalMap(item)
