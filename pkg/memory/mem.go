@@ -1,16 +1,14 @@
 package memory
 
-import "sync"
-
 type MemStore struct {
 	name  string
-	store *sync.Map
+	store map[string][]byte
 }
 
 func NewMemStore(name string) *MemStore {
 	return &MemStore{
 		name:  name,
-		store: &sync.Map{},
+		store: make(map[string][]byte, 0),
 	}
 }
 
@@ -19,19 +17,19 @@ func (ms *MemStore) Name() string {
 }
 
 func (ms *MemStore) Get(key string) ([]byte, error) {
-	val, ok := ms.store.Load(key)
+	val, ok := ms.store[key]
 	if !ok {
 		return nil, nil
 	}
-	return val.([]byte), nil
+	return val, nil
 }
 
 func (ms *MemStore) Put(key string, value []byte) error {
-	ms.store.Store(key, value)
+	ms.store[key] = value
 	return nil
 }
 
 func (ms *MemStore) Delete(key string) error {
-	ms.store.Delete(key)
+	delete(ms.store, key)
 	return nil
 }
